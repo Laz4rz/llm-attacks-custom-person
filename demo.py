@@ -12,6 +12,14 @@ from llm_attacks import get_nonascii_toks
 
 from livelossplot import PlotLosses # pip install livelossplot
 
+# add run hist log
+import pickle
+import os
+
+env = os.environ.get("CONDA_DEFAULT_ENV")
+print(f"Active env is: {env}")
+PATH_DEMO_RUN_HIST= f"/demo_hist/{env}_demo_hist.pickle"
+
 # Set the random seed for NumPy
 np.random.seed(20)
 
@@ -99,7 +107,10 @@ not_allowed_tokens = None if allow_non_ascii else get_nonascii_toks(tokenizer)
 adv_suffix = adv_string_init
 
 
-loss_hist = []
+run_hist = {
+    "candidate": [],
+    "loss": []
+}
 for i in range(num_steps):
     # Step 1. Encode user prompt (behavior + adv suffix) as tokens and return token ids.
     input_ids = suffix_manager.get_input_ids(adv_string=adv_suffix)
@@ -149,9 +160,10 @@ for i in range(num_steps):
 
         best_new_adv_suffix_id = losses.argmin()
         best_new_adv_suffix = new_adv_suffix[best_new_adv_suffix_id]
+        run_hist["candidate"].append(best_new_adv_suffix)
 
         current_loss = losses[best_new_adv_suffix_id]
-        loss_hist.append(current_loss.detach().cpu().numpy())
+        run_hist["loss"].append(current_loss.detach().cpu().numpy())
 
         # Update the running adv_suffix with the best candidate
         adv_suffix = best_new_adv_suffix
@@ -160,7 +172,9 @@ for i in range(num_steps):
                                  suffix_manager.get_input_ids(adv_string=adv_suffix).to(device), 
                                  suffix_manager._assistant_role_slice, 
                                  test_prefixes)
-        
+    
+    with open(PATH_DEMO_RUN_HIST, 'wb') as file:
+        pickle.dump(code, file)
 
     print(f">>>{i}")
     print(current_loss)
