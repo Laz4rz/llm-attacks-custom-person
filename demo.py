@@ -18,7 +18,7 @@ import os
 
 env = os.environ.get("CONDA_DEFAULT_ENV")
 print(f"Active env is: {env}")
-PATH_DEMO_RUN_HIST= f"/demo_hist/{env}_demo_hist.pickle"
+PATH_DEMO_RUN_HIST= f"demo_hist/{env}_demo_hist.pickle"
 
 # Set the random seed for NumPy
 np.random.seed(20)
@@ -174,7 +174,7 @@ for i in range(num_steps):
                                  test_prefixes)
     
     with open(PATH_DEMO_RUN_HIST, 'wb') as file:
-        pickle.dump(code, file)
+        pickle.dump(run_hist, file)
 
     print(f">>>{i}")
     print(current_loss)
@@ -202,5 +202,5 @@ gen_config.max_new_tokens = 256
 completion = tokenizer.decode((generate(model, tokenizer, input_ids, suffix_manager._assistant_role_slice, gen_config=gen_config))).strip()
 
 print(f"\nCompletion: {completion}")
-print(f"Initial loss: {loss_hist[0]}")
+print(f"Initial loss: {run_hist[loss][0]}")
 print(f"Final loss: {current_loss.detach().cpu().numpy()}")
